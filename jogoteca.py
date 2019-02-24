@@ -1,6 +1,8 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session, flash
 
 app = Flask(__name__)
+# chave secreta da aplicação. É usada para criptografar dados padrões utilizado pelo flask
+app.secret_key = 'flask-app'
 
 
 class Jogo:
@@ -38,5 +40,20 @@ def criar():
     lista.append(jogo)
     return redirect('/')
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/autenticar', methods=['POST'])
+def autenticar():
+    if 'mestra' == request.form['senha']:
+        #criando uma sessão. Essa sessão não é uma sessão do lado do servidor e ela é armazenada no cookie no navegador
+        session['usuario_logado'] = request.form['usuario']
+        # O flash é um helper para exibir uma mensagem no html
+        flash(f'{request.form["usuario"]} logou com sucesso')
+        return redirect('/')
+    else:
+        flash('Não logado, tente novamente')
+        return redirect('/login')
 
 app.run(host='0.0.0.0', port=8080, debug=True)
