@@ -26,6 +26,9 @@ def inicio():
 
 @app.route('/novo')
 def novo():
+    # validação se o usuario esta logado na sessão
+    if 'usuario_logado' not in session or session['usuario_logado'] is None:
+        return redirect('/login')
     return render_template('novo.html', titulo='Novo Jogo')
 
 
@@ -62,4 +65,4 @@ def logout():
     flash('Usuário deslogado com sucesso')
     return redirect('/')
 
-app.run(host='0.0.0.0', port=8080, debug=True)
+app.run(host='0.0.0.0', port=5000, debug=True)
