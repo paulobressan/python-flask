@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session, flash, url_for
 
 app = Flask(__name__)
 # chave secreta da aplicação. É usada para criptografar dados padrões utilizado pelo flask
@@ -12,14 +12,26 @@ class Jogo:
         self.console = console
 
 
+class Usuario:
+    def __init__(self, id, nome, senha):
+        self.id = id
+        self.nome = nome
+        self.senha = senha
+
+
 pokemon = Jogo('Pokemon', 'Ação', 'Windows/Mac/Linux')
 supermario = Jogo('Super Mario', 'Ação', 'Super Nintendo')
 lista = [pokemon, supermario]
 
+paulo = Usuario('paulo', 'Paulo Bressan', '123')
+bruna = Usuario('bruna', 'Bruna Carol', '7a1')
+rita = Usuario('rita', 'Rita Bressan', 'rita')
+
+usuarios = {paulo.id: paulo, bruna.id: bruna, rita.id: rita}
 
 # definindo uma rota, por padrão GET
 @app.route('/')
-def inicio():
+def index():
     # Utilizando a função render_template do flask para renderizar paginas html dinamicas(Jinja2)
     return render_template('lista.html', titulo='Jogos', jogos=lista)
 
@@ -28,7 +40,8 @@ def inicio():
 def novo():
     # validação se o usuario esta logado na sessão
     if 'usuario_logado' not in session or session['usuario_logado'] is None:
-        return redirect('/login?proxima=novo')
+        # utilizando o url_for para montar urls dinamicamente de acordo com o metodo
+        return redirect(url_for('login', proxima=url_for('novo')))
     return render_template('novo.html', titulo='Novo Jogo')
 
 
@@ -41,7 +54,7 @@ def criar():
     console = request.form['console']
     jogo = Jogo(nome, categoria, console)
     lista.append(jogo)
-    return redirect('/')
+    return redirect(url_for('index'))
 
 
 @app.route('/login')
@@ -54,24 +67,29 @@ def login():
 
 @app.route('/autenticar', methods=['POST'])
 def autenticar():
-    if 'mestra' == request.form['senha']:
-        # criando uma sessão. Essa sessão não é uma sessão do lado do servidor e ela é armazenada no cookie no navegador
-        session['usuario_logado'] = request.form['usuario']
-        # O flash é um helper para exibir uma mensagem no html
-        flash(f'{request.form["usuario"]} logou com sucesso')
-        # Proxima pagina
-        proxima_pagina = request.form['proxima']
-        return redirect(f'/{proxima_pagina}')
+    if request.form['usuario'] in usuarios:
+        usuario = usuarios[request.form['usuario']]
+        if usuario.senha == request.form['senha']:
+            # criando uma sessão. Essa sessão não é uma sessão do lado do servidor e ela é armazenada no cookie no navegador
+            session['usuario_logado'] = usuario.id
+            # O flash é um helper para exibir uma mensagem no html
+            flash(f'{usuario.nome} logou com sucesso!')
+            # Proxima pagina
+            proxima_pagina = request.form['proxima']
+            return redirect(proxima_pagina)
+        else:
+            flash('Usuário ou senha invalidos')
+            return redirect(url_for('login'))
     else:
         flash('Não logado, tente novamente')
-        return redirect('/login')
+        return redirect(url_for('login'))
 
 
 @app.route('/logout')
 def logout():
     session['usuario_logado'] = None
     flash('Usuário deslogado com sucesso')
-    return redirect('/')
+    return redirect(url_for('index'))
 
 
 app.run(host='0.0.0.0', port=5000, debug=True)
