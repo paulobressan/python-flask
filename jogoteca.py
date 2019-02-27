@@ -60,7 +60,15 @@ def editar(id):
 @app.route('/atualizar', methods=['POST'])
 def atualizar():
     # Recuperando os dados da requisição
-    pass
+    id = request.form['id']
+    id = int(id) if not None else id
+    nome = request.form['nome']
+    categoria = request.form['categoria']
+    console = request.form['console']
+    jogo = Jogo(nome, categoria, console, id)
+    jogo_dao.salvar(jogo)
+    flash(f'Produto {nome} atualizado com sucesso')
+    return redirect(url_for('index'))
 
 @app.route('/login')
 def login():

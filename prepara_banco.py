@@ -5,7 +5,8 @@ conn = mysql.connector.connect(user='root', passwd='root', host='127.0.0.1', por
 # Descomente se quiser desfazer o banco...
 # conn.cursor().execute("DROP DATABASE `jogoteca`;")
 # conn.commit()
-
+# inserindo usuarios
+cursor = conn.cursor()
 criar_tabelas = '''SET NAMES utf8;
     CREATE DATABASE `jogoteca` /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_bin */;
     USE `jogoteca`;
@@ -23,10 +24,8 @@ criar_tabelas = '''SET NAMES utf8;
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;'''
 
-conn.cursor().execute(criar_tabelas, multi=True)
+cursor.execute(criar_tabelas, multi=True)
 
-# inserindo usuarios
-cursor = conn.cursor()
 cursor.executemany(
       'INSERT INTO jogoteca.usuario (id, nome, senha) VALUES (%s, %s, %s)',
       [
