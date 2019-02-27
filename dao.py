@@ -33,10 +33,11 @@ class JogoDao:
         return jogos
 
     def busca_por_id(self, id):
-        cursor = self.__conn.cursor()
+        cursor = self.__conn.cursor(dictionary=True)
         cursor.execute(SQL_JOGO_POR_ID, (id,))
-        tupla = cursor.fetchone()
-        return Jogo(tupla[1], tupla[2], tupla[3], id=tupla[0])
+        row = cursor.fetchone()
+        return Jogo(row['nome'].decode(), row['categoria'].decode(),
+                    row['console'].decode(), row['id'])
 
     def deletar(self, id):
         self.__conn.cursor().execute(SQL_DELETA_JOGO, (id, ))

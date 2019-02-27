@@ -47,6 +47,20 @@ def criar():
     jogo_dao.salvar(jogo)
     return redirect(url_for('index'))
 
+# essa rota espera um parametro inteiro
+@app.route('/editar/<int:id>')
+def editar(id):
+    # validação se o usuario esta logado na sessão
+    if 'usuario_logado' not in session or session['usuario_logado'] is None:
+        # utilizando o url_for para montar urls dinamicamente de acordo com o metodo
+        return redirect(url_for('login', proxima=url_for('editar')))
+    jogo = jogo_dao.busca_por_id(id)
+    return render_template('editar.html', titulo='Editar Jogo', jogo = jogo)
+
+@app.route('/atualizar', methods=['POST'])
+def atualizar():
+    # Recuperando os dados da requisição
+    pass
 
 @app.route('/login')
 def login():
