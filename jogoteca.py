@@ -1,38 +1,28 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
+from dao import JogoDao, UsuarioDao
+import mysql.connector
+from models import Jogo, Usuario
 
 app = Flask(__name__)
 # chave secreta da aplicação. É usada para criptografar dados padrões utilizado pelo flask
 app.secret_key = 'flask-app'
+# Guardando variaveis de configurações no flask
+app.config['MYSQL_HOST'] = "0.0.0.0"
+app.config['MYSQL_USER'] = "root"
+app.config['MYSQL_PASSWORD'] = "root"
+app.config['MYSQL_DB'] = "jogoteca"
+app.config['MYSQL_PORT'] = 3306
 
+conn = mysql.connector.connect(user=app.config.get('MYSQL_USER'), passwd=app.config.get(
+    'MYSQL_PASSWORD'), host=app.config.get('MYSQL_HOST'), port=app.config.get('MYSQL_PORT'), database=app.config.get('MYSQL_DB'))
 
-class Jogo:
-    def __init__(self, id, nome, categoria, console):
-        self.id = id
-        self.nome = nome
-        self.categoria = categoria
-        self.console = console
-
-
-class Usuario:
-    def __init__(self, id, nome, senha):
-        self.id = id
-        self.nome = nome
-        self.senha = senha
-
-
-pokemon = Jogo('Pokemon', 'Ação', 'Windows/Mac/Linux')
-supermario = Jogo('Super Mario', 'Ação', 'Super Nintendo')
-lista = [pokemon, supermario]
-
-paulo = Usuario('paulo', 'Paulo Bressan', '123')
-bruna = Usuario('bruna', 'Bruna Carol', '7a1')
-rita = Usuario('rita', 'Rita Bressan', 'rita')
-
-usuarios = {paulo.id: paulo, bruna.id: bruna, rita.id: rita}
+jogo_dao = JogoDao(conn)
+usuario_dao = UsuarioDao(conn)
 
 # definindo uma rota, por padrão GET
 @app.route('/')
 def index():
+    lista = jogo_dao.listar()
     # Utilizando a função render_template do flask para renderizar paginas html dinamicas(Jinja2)
     return render_template('lista.html', titulo='Jogos', jogos=lista)
 
@@ -54,7 +44,7 @@ def criar():
     categoria = request.form['categoria']
     console = request.form['console']
     jogo = Jogo(nome, categoria, console)
-    lista.append(jogo)
+    jogo_dao.salvar(jogo)
     return redirect(url_for('index'))
 
 
@@ -68,8 +58,8 @@ def login():
 
 @app.route('/autenticar', methods=['POST'])
 def autenticar():
-    if request.form['usuario'] in usuarios:
-        usuario = usuarios[request.form['usuario']]
+    usuario = usuario_dao.buscar_por_id(request.form['usuario'])
+    if usuario:
         if usuario.senha == request.form['senha']:
             # criando uma sessão. Essa sessão não é uma sessão do lado do servidor e ela é armazenada no cookie no navegador
             session['usuario_logado'] = usuario.id
@@ -92,5 +82,6 @@ def logout():
     flash('Usuário deslogado com sucesso')
     return redirect(url_for('index'))
 
-
-app.run(host='0.0.0.0', port=5000, debug=True)
+# Para debugar com vscode tem que remover o debug do run
+# app.run(host='0.0.0.0', port=5000, debug=True)
+app.run(host='0.0.0.0', port=5000)
