@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, session, flash, url_for
+from flask import Flask, render_template, request, redirect, session, flash, url_for, send_from_directory
 from dao import JogoDao, UsuarioDao
 import mysql.connector
 from models import Jogo, Usuario
+import os
 
 app = Flask(__name__)
 # chave secreta da aplicação. É usada para criptografar dados padrões utilizado pelo flask
@@ -12,6 +13,9 @@ app.config['MYSQL_USER'] = "root"
 app.config['MYSQL_PASSWORD'] = "root"
 app.config['MYSQL_DB'] = "jogoteca"
 app.config['MYSQL_PORT'] = 3306
+# Caminho da pasta onde sera realizado os upload da aplicação
+app.config['UPLOAD_PATH'] = \
+    f'{os.path.dirname(os.path.abspath(__file__))}/uploads'
 
 conn = mysql.connector.connect(user=app.config.get('MYSQL_USER'), passwd=app.config.get(
     'MYSQL_PASSWORD'), host=app.config.get('MYSQL_HOST'), port=app.config.get('MYSQL_PORT'), database=app.config.get('MYSQL_DB'))
@@ -44,10 +48,10 @@ def criar():
     categoria = request.form['categoria']
     console = request.form['console']
     jogo = Jogo(nome, categoria, console)
-    jogo_dao.salvar(jogo)
+    jogo = jogo_dao.salvar(jogo)
     # capturando uma imagem do request e salvando em uma pasta
     arquivo = request.files['arquivo']
-    arquivo.save(f'uploads/{arquivo.filename}')
+    arquivo.save(f"{app.config['UPLOAD_PATH']}/capa-{jogo.id}.jpg")
     return redirect(url_for('index'))
 
 # essa rota espera um parametro inteiro
@@ -58,7 +62,9 @@ def editar(id):
         # utilizando o url_for para montar urls dinamicamente de acordo com o metodo
         return redirect(url_for('login', proxima=url_for('editar')))
     jogo = jogo_dao.busca_por_id(id)
-    return render_template('editar.html', titulo='Editar Jogo', jogo = jogo)
+    capa_jogo = f'capa-{jogo.id}.jpg'
+    return render_template('editar.html', titulo='Editar Jogo', jogo=jogo, capa_jogo = capa_jogo)
+
 
 @app.route('/atualizar', methods=['POST'])
 def atualizar():
@@ -73,11 +79,13 @@ def atualizar():
     flash(f'Produto {nome} atualizado com sucesso')
     return redirect(url_for('index'))
 
+
 @app.route('/deletar/<int:id>')
 def deletar(id):
     jogo_dao.deletar(id)
     flash('O jogo foi removido com sucesso!')
     return redirect(url_for('index'))
+
 
 @app.route('/login')
 def login():
@@ -112,6 +120,10 @@ def logout():
     session['usuario_logado'] = None
     flash('Usuário deslogado com sucesso')
     return redirect(url_for('index'))
+
+@app.route('/uploads/<nome_arquivo>')
+def imagem(nome_arquivo):
+    return send_from_directory('uploads', nome_arquivo)
 
 # Para debugar com vscode tem que remover o debug do run
 app.run(host='0.0.0.0', port=5000, debug=True)

@@ -2,8 +2,15 @@
 {%block conteudo%}
 <!-- para realizar upload de imagem o formulario tem que ter enctype com valor multipart/formdata -->
 <form action="{{ url_for('criar') }}" method="POST" enctype="multipart/form-data">
+    <figure>
+        <img src="{{ url_for('imagem', nome_arquivo='capa_padrao.png') }}">
+        <figcaption>
+            <label>
+                <input type="file" name="arquivo" accept=".jpg">
+            </label>
+        </figcaption>
+    </figure>
     <fieldset>
-        <input type="file" name="arquivo" accept=".jpg" >
         <div class="form-group">
             <label for="nome">Nome</label>
             <input type="text" id="nome" name="nome" class="form-control">
