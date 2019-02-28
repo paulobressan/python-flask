@@ -70,6 +70,12 @@ def atualizar():
     flash(f'Produto {nome} atualizado com sucesso')
     return redirect(url_for('index'))
 
+@app.route('/deletar/<int:id>')
+def deletar(id):
+    jogo_dao.deletar(id)
+    flash('O jogo foi removido com sucesso!')
+    return redirect(url_for('index'))
+
 @app.route('/login')
 def login():
     # capturando uma query string ?proxima=VALOR
@@ -105,5 +111,5 @@ def logout():
     return redirect(url_for('index'))
 
 # Para debugar com vscode tem que remover o debug do run
-# app.run(host='0.0.0.0', port=5000, debug=True)
-app.run(host='0.0.0.0', port=5000)
+app.run(host='0.0.0.0', port=5000, debug=True)
+#app.run(host='0.0.0.0', port=5000)
