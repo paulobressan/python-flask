@@ -45,6 +45,9 @@ def criar():
     console = request.form['console']
     jogo = Jogo(nome, categoria, console)
     jogo_dao.salvar(jogo)
+    # capturando uma imagem do request e salvando em uma pasta
+    arquivo = request.files['arquivo']
+    arquivo.save(f'uploads/{arquivo.filename}')
     return redirect(url_for('index'))
 
 # essa rota espera um parametro inteiro

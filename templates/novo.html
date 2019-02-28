@@ -1,7 +1,9 @@
 {% extends "template.html"%}
 {%block conteudo%}
-<form action="{{ url_for('criar') }}" method="POST">
+<!-- para realizar upload de imagem o formulario tem que ter enctype com valor multipart/formdata -->
+<form action="{{ url_for('criar') }}" method="POST" enctype="multipart/form-data">
     <fieldset>
+        <input type="file" name="arquivo" accept=".jpg" >
         <div class="form-group">
             <label for="nome">Nome</label>
             <input type="text" id="nome" name="nome" class="form-control">
