@@ -2,10 +2,11 @@
 {%block conteudo%}
 <!-- para realizar upload de imagem o formulario tem que ter enctype com valor multipart/formdata -->
 <form action="{{ url_for('criar') }}" method="POST" enctype="multipart/form-data">
-    <figure>
-        <img src="{{ url_for('imagem', nome_arquivo='capa_padrao.png') }}">
+    <figure class="thumb col-md-4">
+        <img class="img-responsive" src="{{ url_for('imagem', nome_arquivo='capa_padrao.png') }}">
         <figcaption>
-            <label>
+            <label class="fileContainer">
+                Mudar Capa
                 <input type="file" name="arquivo" accept=".jpg">
             </label>
         </figcaption>
