@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request, redirect, session, flash, url_for, send_from_directory
-from dao import JogoDao, UsuarioDao
-import mysql.connector
-from models import Jogo, Usuario
 import os
+import time
+
+import mysql.connector
+from flask import (Flask, flash, redirect, render_template, request,
+                   send_from_directory, session, url_for)
+
+from dao import JogoDao, UsuarioDao
+from models import Jogo, Usuario
 
 app = Flask(__name__)
 # chave secreta da aplicação. É usada para criptografar dados padrões utilizado pelo flask
@@ -51,7 +55,9 @@ def criar():
     jogo = jogo_dao.salvar(jogo)
     # capturando uma imagem do request e salvando em uma pasta
     arquivo = request.files['arquivo']
-    arquivo.save(f"{app.config['UPLOAD_PATH']}/capa-{jogo.id}.jpg")
+    timestamp = time.time()
+    arquivo.save(f"{app.config['UPLOAD_PATH']}/capa-{jogo.id}-{timestamp}.jpg")
+    flash(f'Produto {nome} salvo com sucesso')
     return redirect(url_for('index'))
 
 # essa rota espera um parametro inteiro
@@ -62,8 +68,8 @@ def editar(id):
         # utilizando o url_for para montar urls dinamicamente de acordo com o metodo
         return redirect(url_for('login', proxima=url_for('editar')))
     jogo = jogo_dao.busca_por_id(id)
-    capa_jogo = f'capa-{jogo.id}.jpg'
-    return render_template('editar.html', titulo='Editar Jogo', jogo=jogo, capa_jogo = capa_jogo)
+    nome_imagem = recupera_imagem(jogo.id)
+    return render_template('editar.html', titulo='Editar Jogo', jogo=jogo, capa_jogo=nome_imagem)
 
 
 @app.route('/atualizar', methods=['POST'])
@@ -75,7 +81,13 @@ def atualizar():
     categoria = request.form['categoria']
     console = request.form['console']
     jogo = Jogo(nome, categoria, console, id)
-    jogo_dao.salvar(jogo)
+    jogo = jogo_dao.salvar(jogo)
+    # capturando uma imagem do request e salvando em uma pasta
+    arquivo = request.files['arquivo']
+    timestamp = time.time()
+    # deleta arquivo existente
+    deleta_arquivo(jogo.id)
+    arquivo.save(f"{app.config['UPLOAD_PATH']}/capa-{jogo.id}-{timestamp}.jpg")
     flash(f'Produto {nome} atualizado com sucesso')
     return redirect(url_for('index'))
 
@@ -83,6 +95,7 @@ def atualizar():
 @app.route('/deletar/<int:id>')
 def deletar(id):
     jogo_dao.deletar(id)
+    deleta_arquivo(id)
     flash('O jogo foi removido com sucesso!')
     return redirect(url_for('index'))
 
@@ -121,9 +134,22 @@ def logout():
     flash('Usuário deslogado com sucesso')
     return redirect(url_for('index'))
 
+
 @app.route('/uploads/<nome_arquivo>')
 def imagem(nome_arquivo):
     return send_from_directory('uploads', nome_arquivo)
+
+
+def recupera_imagem(id):
+    for nome_arquivo in os.listdir(app.config['UPLOAD_PATH']):
+        if f'capa-{id}' in nome_arquivo:
+            return nome_arquivo
+
+
+def deleta_arquivo(id):
+    arquivo = recupera_imagem(id)
+    os.remove(os.path.join(app.config['UPLOAD_PATH'], arquivo))
+
 
 # Para debugar com vscode tem que remover o debug do run
 app.run(host='0.0.0.0', port=5000, debug=True)
